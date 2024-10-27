@@ -1,2 +1,278 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
+/// A utility for handling operations that might fail.
+///
+/// This package provides functions to execute throwing operations and handle their results
+/// without using do-catch blocks. It simplifies error handling and makes it easier to work
+/// with functions that might throw errors.
+///
+/// Example usage:
+/// ```swift
+/// func riskyOperation() throws -> String {
+///     // Some operation that might throw an error
+///     if someCondition {
+///         throw SomeError.someCase
+///     }
+///     return "Success"
+/// }
+///
+/// let (error, result, success) = mightFail {
+///     try riskyOperation()
+/// }
+///
+/// if success {
+///     print("Operation succeeded with result: \(result!)")
+/// } else {
+///     print("Operation failed with error: \(error)")
+/// }
+/// ```
+@usableFromInline final class NotAnError: Error, CustomStringConvertible {
+    @usableFromInline static let shared = NotAnError()
+    @usableFromInline let description = """
+    This is not an error, always check the result value in a guard statement before checking the error value!
+    let (error, result) = mightFail { try someFunc() }
+    guard let result else {
+      // handle error, for example
+      switch error {
+      }
+      return 
+    }
+    // use the result
+    """
+    private init() {}
+}
+
+// MARK: - Standard
+
+/// Executes a throwing function and returns a tuple containing the error (if any), the result (if successful), and a boolean indicating success.
+///
+/// This function allows you to handle potentially throwing operations without using do-catch blocks.
+///
+/// - Parameter throwingFunction: A function that might throw an error.
+/// - Returns: A tuple containing the error (if any), the result (if successful), and a boolean indicating success.
+///
+/// Example usage:
+/// ```swift
+/// func fetchData() throws -> Data {
+///     // Simulating a network request that might fail
+///     if Bool.random() {
+///         throw NSError(domain: "NetworkError", code: 404, userInfo: nil)
+///     }
+///     return Data()
+/// }
+///
+/// let (error, data, success) = mightFail {
+///     try fetchData()
+/// }
+///
+/// if success {
+///     print("Data fetched successfully: \(data!)")
+/// } else {
+///     print("Failed to fetch data. Error: \(error)")
+/// }
+/// ```
+@inlinable
+public func mightFail<T>(_ throwingFunction: () throws -> T) -> (error: Error, result: T?, success: Bool) {
+    do {
+        let value = try throwingFunction()
+        return (error: NotAnError.shared, result: value, success: true)
+    } catch {
+        return (error: error, result: nil, success: false)
+    }
+}
+
+@inlinable
+public func mightFail<T>(_ throwingFunction: () throws -> T?) -> (error: Error?, result: T?, success: Bool) {
+    do {
+        let value = try throwingFunction()
+        return (error: nil, result: value, success: true)
+    } catch {
+        return (error: error, result: nil, success: false)
+    }
+}
+
+/// Executes a throwing function and returns a tuple containing the error (if any) and the result (if successful).
+///
+/// This is a simplified version of the `mightFail` function that doesn't include the success boolean.
+///
+/// - Parameter throwingFunction: A function that might throw an error.
+/// - Returns: A tuple containing the error (if any) and the result (if successful).
+///
+/// Example usage:
+/// ```swift
+/// func divide(_ a: Int, by b: Int) throws -> Int {
+///     guard b != 0 else { throw DivisionError.divideByZero }
+///     return a / b
+/// }
+///
+/// let (error, result) = mightFail {
+///     try divide(10, by: 2)
+/// }
+///
+/// if let result = result {
+///     print("Division result: \(result)")
+/// } else {
+///     print("Division failed. Error: \(error)")
+/// }
+/// ```
+@inlinable
+public func mightFail<T>(_ throwingFunction: () throws -> T) -> (error: Error, result: T?) {
+    let (error, result, _) = mightFail(throwingFunction)
+    return (error, result)
+}
+
+// MARK: - All Settled
+
+/// Executes multiple throwing functions and returns an array of results.
+///
+/// This function allows you to execute multiple operations that might throw errors and collect all their results,
+/// regardless of whether they succeeded or failed.
+///
+/// - Parameter throwingFunctions: An array of functions that might throw errors.
+/// - Returns: An array of tuples, each containing the error (if any), the result (if successful), and a boolean indicating success for each function.
+///
+/// Example usage:
+/// ```swift
+/// func operation1() throws -> Int { return 1 }
+/// func operation2() throws -> Int { throw NSError(domain: "TestError", code: 1, userInfo: nil) }
+/// func operation3() throws -> Int { return 3 }
+///
+/// let results = mightFail([
+///     { try operation1() },
+///     { try operation2() },
+///     { try operation3() }
+/// ])
+///
+/// for (index, (error, result, success)) in results.enumerated() {
+///     if success {
+///         print("Operation \(index + 1) succeeded with result: \(result!)")
+///     } else {
+///         print("Operation \(index + 1) failed with error: \(error)")
+///     }
+/// }
+/// ```
+@inlinable
+public func mightFail<T>(_ throwingFunctions: [() throws -> T]) -> [(error: Error, result: T?, success: Bool)] {
+    var results: [(error: Error, result: T?, success: Bool)] = []
+    for throwingFunction in throwingFunctions {
+        let (error, result, success) = mightFail(throwingFunction)
+        results.append((error, result, success))
+    }
+    return results
+}
+
+// MARK: - Async
+
+/// Executes an async throwing function and returns a tuple containing the error (if any), the result (if successful), and a boolean indicating success.
+///
+/// This function is the asynchronous version of `mightFail`, allowing you to handle potentially throwing async operations.
+///
+/// - Parameter throwingFunction: An async function that might throw an error.
+/// - Returns: A tuple containing the error (if any), the result (if successful), and a boolean indicating success.
+///
+/// Example usage:
+/// ```swift
+/// func fetchUserData(id: Int) async throws -> User {
+///     // Simulating an async network request that might fail
+///     try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
+///     if id % 2 == 0 {
+///         return User(id: id, name: "User \(id)")
+///     } else {
+///         throw NSError(domain: "UserFetchError", code: 404, userInfo: nil)
+///     }
+/// }
+///
+/// let (error, user, success) = await mightFail {
+///     try await fetchUserData(id: 1)
+/// }
+///
+/// if success {
+///     print("User fetched successfully: \(user!)")
+/// } else {
+///     print("Failed to fetch user. Error: \(error)")
+/// }
+/// ```
+@available(iOS 13.0.0, macOS 10.15, *)
+@inlinable
+public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T) async -> (error: Error, result: T?, success: Bool) {
+    do {
+        let value = try await throwingFunction()
+        return (error: NotAnError.shared, result: value, success: true)
+    } catch {
+        return (error: error, result: nil, success: false)
+    }
+}
+
+/// Executes an async throwing function and returns a tuple containing the error (if any) and the result (if successful).
+///
+/// This is a simplified version of the async `mightFail` function that doesn't include the success boolean.
+///
+/// - Parameter throwingFunction: An async function that might throw an error.
+/// - Returns: A tuple containing the error (if any) and the result (if successful).
+///
+/// Example usage:
+/// ```swift
+/// func processData() async throws -> ProcessedData {
+///     // Some async processing that might throw an error
+///     try await Task.sleep(nanoseconds: 500_000_000) // Sleep for 0.5 seconds
+///     if Bool.random() {
+///         throw ProcessingError.invalidData
+///     }
+///     return ProcessedData()
+/// }
+///
+/// let (error, data) = await mightFail {
+///     try await processData()
+/// }
+///
+/// if let data = data {
+///     print("Data processed successfully: \(data)")
+/// } else {
+///     print("Data processing failed. Error: \(error)")
+/// }
+/// ```
+@available(iOS 13.0.0, macOS 10.15, *)
+@inlinable
+public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T) async -> (error: Error, result: T?) {
+    let (error, result, _) = await mightFail(throwingFunction)
+    return (error, result)
+}
+
+// MARK: - Async All Settled
+
+/// Executes multiple async throwing functions and returns an array of results.
+///
+/// This function allows you to execute multiple asynchronous operations that might throw errors and collect all their results,
+/// regardless of whether they succeeded or failed.
+///
+/// - Parameter throwingFunctions: An array of async functions that might throw errors.
+/// - Returns: An array of tuples, each containing the error (if any), the result (if successful), and a boolean indicating success for each function.
+///
+/// Example usage:
+/// ```swift
+/// func asyncOperation1() async throws -> Int { return 1 }
+/// func asyncOperation2() async throws -> Int { throw NSError(domain: "TestError", code: 2, userInfo: nil) }
+/// func asyncOperation3() async throws -> Int { return 3 }
+///
+/// let results = await mightFail([
+///     { try await asyncOperation1() },
+///     { try await asyncOperation2() },
+///     { try await asyncOperation3() }
+/// ])
+///
+/// for (index, (error, result, success)) in results.enumerated() {
+///     if success {
+///         print("Async operation \(index + 1) succeeded with result: \(result!)")
+///     } else {
+///         print("Async operation \(index + 1) failed with error: \(error)")
+///     }
+/// }
+/// ```
+@available(iOS 13.0.0, macOS 10.15, *)
+@inlinable
+public func mightFail<T>(_ throwingFunctions: [@Sendable () async throws -> T]) async -> [(error: Error, result: T?, success: Bool)] {
+    var results: [(error: Error, result: T?, success: Bool)] = []
+    for throwingFunction in throwingFunctions {
+        let (error, result, success) = await mightFail(throwingFunction)
+        results.append((error, result, success))
+    }
+    return results
+}

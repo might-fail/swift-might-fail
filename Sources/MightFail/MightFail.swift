@@ -276,3 +276,48 @@ public func mightFail<T>(_ throwingFunctions: [@Sendable () async throws -> T]) 
     }
     return results
 }
+
+/// Executes an async throwing function that returns an optional value and returns a tuple containing the error (if any), 
+/// the result (if successful), and a boolean indicating success.
+///
+/// This function is the asynchronous version of `mightFail` for optional return types, allowing you to handle 
+/// potentially throwing async operations that may return nil.
+///
+/// - Parameter throwingFunction: An async function that might throw an error and returns an optional value.
+/// - Returns: A tuple containing the error (if any), the result (if successful), and a boolean indicating success.
+///
+/// Example:
+/// ```swift
+/// func fetchUserProfile(id: Int) async throws -> UserProfile? {
+///     try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
+///     if id < 0 {
+///         throw FetchError.invalidId
+///     }
+///     return id == 0 ? nil : UserProfile(id: id, name: "User \(id)")
+/// }
+///
+/// let (error, profile, success) = await mightFail {
+///     try await fetchUserProfile(id: 1)
+/// }
+///
+/// if success {
+///     if let profile = profile {
+///         print("Profile fetched successfully: \(profile)")
+///     } else {
+///         print("No profile found")
+///     }
+/// } else {
+///     print("Failed to fetch profile. Error: \(error)")
+/// }
+/// }
+/// ```
+@available(iOS 13.0.0, macOS 10.15, *)
+@inlinable
+public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T?) async -> (error: Error?, result: T?, success: Bool) {
+    do {
+        let value = try await throwingFunction()
+        return (error: nil, result: value, success: true)
+    } catch {
+        return (error: error, result: nil, success: false)
+    }
+}

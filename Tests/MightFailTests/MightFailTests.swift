@@ -36,8 +36,11 @@ enum TestError: Error, Equatable {
 
   @Test("Simplified successful synchronous operation returns correct result")
   func testSimplifiedSuccessSync() throws {
-    let (error, result) = mightFail {
+    func returnInt() throws -> Int {
       return 42
+    }
+    let (error, result) = mightFail {
+      try returnInt()
     }
 
     #expect(result == 42)
@@ -117,9 +120,13 @@ enum TestError: Error, Equatable {
 
   @Test("Successful asynchronous operation returns correct result")
   func testSuccessfulAsync() async throws {
-    let (error, result, success) = await mightFail {
+
+    @Sendable func returnString() async throws -> String {
       try await Task.sleep(nanoseconds: 1_000_000)
       return "Async Success"
+    }
+    let (error, result, success) = await mightFail {
+      try await returnString()
     }
 
     #expect(success)
@@ -231,5 +238,33 @@ enum TestError: Error, Equatable {
     #expect(error == nil)
   }
 
+  // Add these tests in the "Asynchronous Tests" section
+  @Test("Handling async nil values")
+  func testAsyncNilValues() async throws {
+    @Sendable func returnStringOptional() async throws -> String? {
+      return nil
+    }
+    let (error, result, success) = await mightFail {
+      try await returnStringOptional()
+    }
+
+    #expect(success)
+    #expect(result == nil)
+    #expect(error == nil)
+  }
+
+  @Test("Handling async optional values")
+  func testAsyncOptionalValues() async throws {
+    @Sendable func returnStringOptional() async throws -> String? {
+      return "Hello"
+    }
+    let (error, result, success) = await mightFail {
+      try await returnStringOptional()
+    }
+
+    #expect(success)
+    #expect(result == "Hello")
+    #expect(error == nil)
+  }
 
 }

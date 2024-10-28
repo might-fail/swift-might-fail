@@ -1,71 +1,202 @@
-# Getting Started with MightFail
+# Getting Started 
 
-Learn how to use MightFail in your Swift projects.
+A Swift library for handling async and sync errors without `try` and `catch` blocks.
 
-## Basic Usage
+## Installation
 
-The core function of MightFail is the `mightFail(_:)` function. It takes a throwing function as its argument and returns a tuple containing the error (if any), the result (if successful), and a boolean indicating success.
+### Swift Package Manager
+
+Add MightFail as a dependency to your `Package.swift`:
 
 ```swift
+dependencies: [
+    .package(url: "https://github.com/might-fail/swift.git", from: "0.1.0")
+]
+```
+
+Then add it to your target's dependencies:
+
+```swift
+targets: [
+    .target(
+        name: "YourTarget",
+        dependencies: ["MightFail"]),
+]
+```
+
+### Import
+
+Import MightFail in your source files:
+
+```swift
+import MightFail
+```
+
+## Usage
+
+MightFail provides a simplified way to handle errors in Swift without traditional try-catch blocks. It works with both synchronous and asynchronous code.
+
+### Important
+
+* **Always** guard the success case. 
+* **Never** check the error case.
+
+```swift 
+// Good
+guard let data else {
+    // handle error
+}
+// Good 
+guard success else {
+    // handle error
+}
+// Bad
+if let error {
+    // handle error
+}
+```
+
+### Basic Synchronous Usage
+
+```swift
+// Returns (error, result, success)
 let (error, result, success) = mightFail {
-    try someThrowingFunction()
+    return "Success"
 }
 
+// Check success
 if success {
-    print("Operation succeeded with result: \(result!)")
-} else {
-    print("Operation failed with error: \(error)")
+    print(result) // "Success"
 }
 ```
 
-## Async Operations
-
-MightFail also supports async operations:
+### Simplified Return Type
 
 ```swift
-let (error, result, success) = await mightFail {
-    try await someAsyncThrowingFunction()
+// Returns just (error, result)
+let (error, result) = mightFail {
+    return 42
+}
+
+print(result) // 42
+print(error) // nil
+```
+
+### Handling Errors
+
+#### Traditional Error Handling:
+```swift
+var vendingMachine = VendingMachine()
+vendingMachine.coinsDeposited = 8
+do {
+    try buyFavoriteSnack(person: "Alice", vendingMachine: vendingMachine)
+    print("Success! Yum.")
+} catch VendingMachineError.invalidSelection {
+    print("Invalid Selection.")
+} catch VendingMachineError.outOfStock {
+    print("Out of Stock.")
+} catch VendingMachineError.insufficientFunds(let coinsNeeded) {
+    print("Insufficient funds. Please insert an additional \(coinsNeeded) coins.")
+} catch {
+    print("Unexpected error: \(error).")
 }
 ```
 
-## Multiple Operations
+#### With MightFail:
+```swift
+let vendingMachine = VendingMachine()
+vendingMachine.coinsDeposited = 8
+let (error, _, success) = mightFail {
+    try buyFavoriteSnack(person: "Alice", vendingMachine: vendingMachine)
+}
+guard success else {
+    switch error {
+    case VendingMachineError.invalidSelection:
+        print("Invalid Selection.")
+    case VendingMachineError.outOfStock:
+        print("Out of Stock.")
+    case VendingMachineError.insufficientFunds(let coinsNeeded):
+        print("Insufficient funds. Please insert an additional \(coinsNeeded) coins.")
+    default:
+        print("Unexpected error: \(error).")
+    }
+    return
+}
+print("Success! Yum.")
+```
 
-You can use MightFail with multiple operations:
+### Async Support
+
+```swift
+// Basic async usage
+let (error, result, success) = await mightFail {
+    try await Task.sleep(nanoseconds: 1_000_000)
+    return "Async Success"
+}
+
+// Simplified async return
+let (error, result) = await mightFail {
+    try await Task.sleep(nanoseconds: 1_000_000)
+    return 42
+}
+```
+
+### Multiple Operations
+
+You can run multiple operations and get their results:
 
 ```swift
 let results = mightFail([
-    { try operation1() },
-    { try operation2() },
-    { try operation3() }
+    { 1 },
+    { throw TestError.simple },
+    { 3 },
 ])
 
-for (error, result, success) in results {
-    if success {
-        print("Operation succeeded with result: \(result!)")
-    } else {
-        print("Operation failed with error: \(error)")
+// Check results
+results.forEach { (error, result) in
+    guard let result else {
+        print("Error: \(error)")
+        return
     }
+    print("Result: \(result)")
 }
 ```
 
-## Async Multiple Operations
-
-For async operations, you can use the async version of `mightFail(_:)` with an array of async throwing functions:
+Or maybe something like this:
 
 ```swift
-let results = await mightFail([
-    { try await asyncOperation1() },
-    { try await asyncOperation2() },
-    { try await asyncOperation3() }
+guard let imageFiles = await memoryStorage.imageFilesStore[imageId] else {
+    return
+}
+let deleteResults = mightFail([
+    { try FileStorage.deleteFile(name: imageFiles.fullSizeName, ext: imageFiles.ext) },
+    { try FileStorage.deleteFile(name: imageFiles.thumbnailName, ext: imageFiles.ext) },
+    { try FileStorage.deleteFile(name: imageFiles.mediumSizeName, ext: imageFiles.ext) },
 ])
 
-for (error, result, success) in results {
-    if success {
-        print("Async operation succeeded with result: \(result!)")
-    } else {
-        print("Async operation failed with error: \(error)")
-    }
+for deleteResult in deleteResults.filter({ $0.success == false }) {
+    print("Failed to delete image file: \(deleteResult.error)")
+}
+
+for deleteResult in deleteResults.filter({ $0.success == true }) {
+    print("Deleted image file: \(deleteResult.result)")
 }
 ```
 
-This setup allows you to handle multiple potentially failing operations, both synchronous and asynchronous, in a clean and consistent manner.
+### Optional Values
+
+MightFail handles optional values gracefully:
+
+```swift
+func returnOptional() throws -> String? {
+    return nil
+}
+
+let (error, result, success) = mightFail {
+    try returnOptional()
+}
+
+// success will be true
+// result will be nil
+// error will be nil
+```

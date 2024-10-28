@@ -50,7 +50,7 @@ for (error, result, success) in results {
 
 ## Async Multiple Operations
 
-For async operations, you can use the async version of ```mightFail(_:)``` with an array of async throwing functions:
+For async operations, you can use the async version of `mightFail(_:)` with an array of async throwing functions:
 
 ```swift
 let results = await mightFail([

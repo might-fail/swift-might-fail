@@ -14,9 +14,9 @@ MightFail provides a set of functions to handle operations that might throw erro
 
 ### Functions
 
-- `mightFail(_:)-5owtv`
+<!-- - `mightFail(_:)-5owtv`
 - `mightFail(_:)-1gr5o`
 - `mightFail(_:)-7bt4a`
 - `mightFail(_:)-1m6lj`
 - `mightFail(_:)-2s1e4`
-- `mightFail(_:)-8avrp`
+- `mightFail(_:)-8avrp` -->

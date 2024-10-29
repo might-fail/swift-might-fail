@@ -2,7 +2,7 @@
 
 A Swift library for handling async and sync errors without `try` and `catch` blocks.
 
-[Documentation](https://mightfail.dev/swift-docs)
+[Documentation](https://swift.mightfail.dev/documentation/MightFail)
 
 ## Installation
 

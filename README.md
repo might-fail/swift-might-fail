@@ -3,6 +3,9 @@
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmight-fail%2Fswift-might-fail%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/might-fail/swift-might-fail)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmight-fail%2Fswift-might-fail%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/might-fail/swift-might-fail)
 
+![Build and Test](https://github.com/meech-ward/AsyncCoreBluetooth/actions/workflows/build.yml/badge.svg)
+
+
 A Swift library for handling async and sync errors without `try` and `catch` blocks.
 
 [Documentation](https://swift.mightfail.dev/documentation/mightfail)
@@ -15,7 +18,7 @@ Add MightFail as a dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/might-fail/swift.git", from: "0.1.0")
+    .package(url: "https://github.com/might-fail/swift.git", from: "0.2.1")
 ]
 ```
 

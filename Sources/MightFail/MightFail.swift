@@ -147,7 +147,7 @@ public func mightFail<T>(_ throwingFunctions: [() throws -> T]) -> [MaybeWithSuc
 ///     print("Failed to fetch user. Error: \(error)")
 /// }
 /// ```
-@available(iOS 13.0.0, macOS 10.15, *)
+@available(iOS 13.0.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T) async -> MaybeWithSuccess<T> {
     do {
@@ -186,7 +186,7 @@ public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T) asy
 ///     print("Data processing failed. Error: \(error)")
 /// }
 /// ```
-@available(iOS 13.0.0, macOS 10.15, *)
+@available(iOS 13.0.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T) async -> Maybe<T> {
     let (error, result, _) = await mightFail(throwingFunction)
@@ -223,7 +223,7 @@ public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T) asy
 ///     }
 /// }
 /// ```
-@available(iOS 13.0.0, macOS 10.15, *)
+@available(iOS 13.0.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public func mightFail<T>(_ throwingFunctions: [@Sendable () async throws -> T]) async -> [MaybeWithSuccess<T>] {
     var results: [MaybeWithSuccess<T>] = []
@@ -268,7 +268,7 @@ public func mightFail<T>(_ throwingFunctions: [@Sendable () async throws -> T]) 
 /// }
 /// }
 /// ```
-@available(iOS 13.0.0, macOS 10.15, *)
+@available(iOS 13.0.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 @inlinable
 public func mightFail<T>(_ throwingFunction: @Sendable () async throws -> T?) async -> (error: Error?, result: T?, success: Bool) {
     do {

@@ -15,7 +15,7 @@
 // //  }.value
 // // }
 
-// @available(iOS 13.0.0, macOS 10.15, *)
+// @available(iOS 13.0.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 // @inlinable
 // public func mightFail<T>(
 //   isolation: isolated (any Actor)? = #isolation,
@@ -51,7 +51,7 @@
 //   return result
 // }
 
-// // @available(iOS 13.0.0, macOS 10.15, *)
+// // @available(iOS 13.0.0, macOS 10.15, watchOS 6.0, tvOS 13.0, *)
 // // @inlinable
 // // public func mightFail<T>(
 // //  isolation: isolated (any Actor)? = #isolation,

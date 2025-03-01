@@ -1,4 +1,7 @@
-# Might Fail  
+# Might Fail
+
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmight-fail%2Fswift-might-fail%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/might-fail/swift-might-fail)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmight-fail%2Fswift-might-fail%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/might-fail/swift-might-fail)
 
 A Swift library for handling async and sync errors without `try` and `catch` blocks.
 
@@ -40,15 +43,15 @@ MightFail provides a simplified way to handle errors in Swift without traditiona
 
 ### Important
 
-* **Always** guard the success case. 
-* **Never** check the error case.
+- **Always** guard the success case.
+- **Never** check the error case.
 
-```swift 
+```swift
 // Good
 guard let data else {
     // handle error
 }
-// Good 
+// Good
 guard success else {
     // handle error
 }
@@ -87,6 +90,7 @@ print(error) // nil
 ### Handling Errors
 
 #### Traditional Error Handling:
+
 ```swift
 var vendingMachine = VendingMachine()
 vendingMachine.coinsDeposited = 8
@@ -105,6 +109,7 @@ do {
 ```
 
 #### With MightFail:
+
 ```swift
 let vendingMachine = VendingMachine()
 vendingMachine.coinsDeposited = 8
@@ -203,12 +208,11 @@ let (error, result, success) = mightFail {
 // error will be nil
 ```
 
-
 # do, try, catch is bad
 
-I think throwing exceptions is nice, I like that an exception breaks control flow and I like exception propogation. The only thing I don't like catching exceptions. 
+I think throwing exceptions is nice, I like that an exception breaks control flow and I like exception propogation. The only thing I don't like catching exceptions.
 
-This mostly happens at the most "user facing" part of the code like an api endpoint or a UI component, the outer most function call. So catching an exception needs to notify the user that something went wrong, log the error for debugging, and stop the currently execution flow. 
+This mostly happens at the most "user facing" part of the code like an api endpoint or a UI component, the outer most function call. So catching an exception needs to notify the user that something went wrong, log the error for debugging, and stop the currently execution flow.
 
 ## Guard ✅
 
@@ -220,17 +224,17 @@ func fetch<T: Codable>(from urlString: String) async throws -> Data {
     guard let url = URL(string: urlString) else {
         throw URLError(.badURL)
     }
-    
+
     // Create and configure the URL session
     let session = URLSession.shared
-    
+
     // Make the network request and await the response
     let (data, response) = try await session.data(from: url)
 
     guard let data = data else {
         throw URLError(.badServerResponse)
     }
-    
+
     // Verify we got a successful HTTP response
     guard let httpResponse = response as? HTTPURLResponse,
             (200...299).contains(httpResponse.statusCode) else {
@@ -256,7 +260,7 @@ do {
 
 ## Everything in One Do/Try/Catch Block ❌
 
-Then this leads to putting a whole bunch of code in the `do` block. 
+Then this leads to putting a whole bunch of code in the `do` block.
 
 ```swift
 try {
@@ -275,17 +279,17 @@ try {
   // handle any errors, not sure which one though 🤷‍♀️
 }
 
-// or 
+// or
 
 catch let error as URLError {
     print("Network error: \(error.localizedDescription)")
-    
+
 } catch let error as DecodingError {
     print("JSON error: \(error.localizedDescription)")
-    
+
 } catch let error as CocoaError {
     print("File error: \(error.localizedDescription)")
-    
+
 } catch {
     print("Unexpected error: \(error)")
 }

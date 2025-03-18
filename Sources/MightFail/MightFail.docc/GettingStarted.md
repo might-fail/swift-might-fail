@@ -10,7 +10,7 @@ Add MightFail as a dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/might-fail/swift.git", from: "0.1.0")
+    .package(url: "https://github.com/might-fail/swift.git", from: "0.2.1")
 ]
 ```
 
@@ -65,9 +65,12 @@ let (error, result, success) = mightFail {
 }
 
 // Check success
-if success {
-    print(result) // "Success"
+guard success else {
+    print(error)
+    return
 }
+
+print(result) // "Success"
 ```
 
 ### Simplified Return Type
@@ -78,8 +81,12 @@ let (error, result) = mightFail {
     return 42
 }
 
+guard let result else {
+    print(error)
+    return
+}
+
 print(result) // 42
-print(error) // nil
 ```
 
 ### Handling Errors
@@ -153,12 +160,13 @@ let results = mightFail([
 ])
 
 // Check results
-results.forEach { (error, result) in
-    guard let result else {
-        print("Error: \(error)")
-        return
+for (index, (error, result, success)) in results.enumerated() {
+    guard success else {
+        print("Operation \(index + 1) failed with error: \(error)")
+        continue
     }
-    print("Result: \(result)")
+    
+    print("Operation \(index + 1) succeeded with result: \(result!)")
 }
 ```
 
@@ -185,18 +193,29 @@ for deleteResult in deleteResults.filter({ $0.success == true }) {
 
 ### Optional Values
 
-MightFail handles optional values gracefully:
+If you pass an optional value to mightFail, the first guard is for the error check, you'll need a second guard to see if you have a value.
 
 ```swift
 func returnOptional() throws -> String? {
     return nil
 }
 
-let (error, result, success) = mightFail {
+let (error, result) = mightFail {
     try returnOptional()
 }
 
-// success will be true
-// result will be nil
-// error will be nil
+// result is String??
+guard let result else {
+    // there was an error, handle it 
+    print(error)
+    return
+}
+
+guard let result else {
+   // no error, but result is nil, handle it 
+   print("No result")
+   return
+}
+
+print(result) // "Success"
 ```

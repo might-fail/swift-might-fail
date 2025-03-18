@@ -64,33 +64,10 @@ if let error {
 }
 ```
 
-### Basic Synchronous Usage
-
-```swift
-// Returns (error, result, success)
-let (error, result, success) = mightFail {
-    return "Success"
-}
-
-// Check success
-if success {
-    print(result) // "Success"
-}
-```
-
-### Simplified Return Type
-
-```swift
-// Returns just (error, result)
-let (error, result) = mightFail {
-    return 42
-}
-
-print(result) // 42
-print(error) // nil
-```
 
 ### Handling Errors
+
+Like I said, always guard. So the success case is at the bottom of the function.
 
 #### Traditional Error Handling:
 
@@ -134,6 +111,40 @@ guard success else {
 }
 print("Success! Yum.")
 ```
+
+### Basic Synchronous Usage
+
+```swift
+// Returns (error, result, success)
+let (error, result, success) = mightFail {
+    return "Success"
+}
+
+// Check success
+guard success else {
+    print(error)
+    return
+}
+
+print(result) // "Success"
+```
+
+### Simplified Return Type
+
+```swift
+// Returns just (error, result)
+let (error, result) = mightFail {
+    return 42
+}
+
+guard let result else {
+    print(error) 
+    return
+}
+
+print(result) // 42
+```
+
 
 ### Async Support
 
@@ -195,21 +206,34 @@ for deleteResult in deleteResults.filter({ $0.success == true }) {
 
 ### Optional Values
 
-MightFail handles optional values gracefully:
+If you pass an optional value to mightFail, the first guard is for the error check, you'll need a second guard to see if you have a value.
 
 ```swift
 func returnOptional() throws -> String? {
     return nil
 }
 
-let (error, result, success) = mightFail {
+let (error, result) = mightFail {
     try returnOptional()
 }
 
-// success will be true
-// result will be nil
-// error will be nil
+// result is String??
+guard let result else {
+    // there was an error, handle it 
+    print(error)
+    return
+}
+
+guard let result else {
+   // no error, but result is nil, handle it 
+   print("No result")
+   return
+}
+
+print(result) // "Success"
 ```
+
+---
 
 # do, try, catch is bad
 

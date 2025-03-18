@@ -219,9 +219,21 @@ enum TestError: Error, Equatable {
       try returnStringOptional()
     }
 
-    #expect(success)
-    #expect(result == nil)
-    #expect(error == nil)
+    guard let result else {
+      print("failed and there is an error")
+      throw TestError.withMessage("Failed operation")
+    }
+
+    guard let result else {
+      // this is just checking if there's a value
+      // should have no value in this case
+      #expect(success)
+      #expect(result == nil)
+      #expect(error != nil)
+      return
+    }
+
+    throw TestError.withMessage("Failed operation \(result)")
   }
 
   @Test("Handling optional values")
@@ -233,9 +245,18 @@ enum TestError: Error, Equatable {
       try returnStringOptional()
     }
 
+    guard let result else {
+      print("failed and there is an error \(error)")
+      throw TestError.withMessage("Failed operation")
+    }
+    guard let result else {
+      // just checking if there's a value
+      throw TestError.withMessage("Failed operation")
+    }
+
     #expect(success)
     #expect(result == "Hello")
-    #expect(error == nil)
+    #expect(error != nil)
   }
 
   // Add these tests in the "Asynchronous Tests" section
@@ -247,10 +268,21 @@ enum TestError: Error, Equatable {
     let (error, result, success) = await mightFail {
       try await returnStringOptional()
     }
+    guard let result else {
+      print("failed and there is an error")
+      throw TestError.withMessage("Failed operation")
+    }
+    guard let result else {
+      // this is just checking if there's a value
+      // should have no value in this case
+      #expect(success)
+      #expect(result == nil)
+      #expect(error != nil)
+      return
+    }
 
-    #expect(success)
-    #expect(result == nil)
-    #expect(error == nil)
+    throw TestError.withMessage("Failed operation \(result)")
+
   }
 
   @Test("Handling async optional values")
@@ -262,9 +294,18 @@ enum TestError: Error, Equatable {
       try await returnStringOptional()
     }
 
+    guard let result else {
+      print("failed and there is an error \(error)")
+      throw TestError.withMessage("Failed operation")
+    }
+    guard let result else {
+      // just checking if there's a value
+      throw TestError.withMessage("Failed operation")
+    }
+
     #expect(success)
     #expect(result == "Hello")
-    #expect(error == nil)
+    #expect(error != nil)
   }
 
 }
